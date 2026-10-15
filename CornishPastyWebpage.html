@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cornish Telegraph & Pasty Gazette | Est. 1888</title>
+    <!-- Celtic & Newspaper Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel+Decorative:wght@700&family=IM+Fell+English:ital@0;1&family=MedievalSharp&display=swap" rel="stylesheet">
+    
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <style>
+        :root {
+            --cornish-yellow: #FFC72C;
+            --cornish-black: #0D0D0D;
+            --cornish-white: #FFFFFF;
+            --paper-bg: #F4EAD3;
+            --paper-border: #2A241E;
+            --ink-fade: #332E27;
+            --font-celtic: 'Cinzel Decorative', 'MedievalSharp', serif;
+            --font-masthead: 'UnifrakturMaguntia', serif;
+            --font-body: 'IM Fell English', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--cornish-black);
+            color: var(--cornish-black);
+            font-family: var(--font-body);
+            line-height: 1.4;
+            padding: 20px;
+            background-image: radial-gradient(circle, #2a2a2a 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Newspaper Container */
+        .newspaper {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--paper-bg);
+            border: 12px double var(--cornish-black);
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* Header Section */
+        header {
+            border-bottom: 4px solid var(--cornish-black);
+            text-align: center;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--cornish-black);
+            padding-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .flag-icon {
+            display: inline-block;
+            width: 24px;
+            height: 16px;
+            background: var(--cornish-black);
+            position: relative;
+            vertical-align: middle;
+            border: 1px solid var(--cornish-black);
+        }
+        .flag-icon::before, .flag-icon::after {
+            content: '';
+            position: absolute;
+            background: var(--cornish-white);
+        }
+        .flag-icon::before { top: 6px; left: 0; width: 100%; height: 4px; }
+        .flag-icon::after { top: 0; left: 10px; width: 4px; height: 100%; }
+
+        .masthead {
+            font-family: var(--font-masthead);
+            font-size: 4.5rem;
+            text-transform: capitalize;
+            margin: 15px 0 5px 0;
+            text-shadow: 2px 2px 0px var(--cornish-yellow);
+            line-height: 1;
+        }
+
+        .tagline {
+            font-family: var(--font-celtic);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            word-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        /* Main Banner Callout */
+        .banner-callout {
+            background-color: var(--cornish-black);
+            color: var(--cornish-yellow);
+            text-align: center;
+            padding: 10px;
+            font-family: var(--font-celtic);
+            font-size: 1.5rem;
+            border: 2px solid var(--cornish-yellow);
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 0px var(--cornish-white);
+        }
+
+        /* Grid Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        /* 3D Asset Display Column */
+        .interactive-stage {
+            border: 3px double var(--cornish-black);
+            background-color: #e2d7be;
+            position: relative;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stage-header {
+            background-color: var(--cornish-black);
+            color: var(--cornish-white);
+            padding: 8px 15px;
+            font-family: var(--font-celtic);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stage-header h2 {
+            font-size: 1.1rem;
+            color: var(--cornish-yellow);
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+
+        .stage-caption {
+            font-style: italic;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            border-top: 1px solid var(--cornish-black);
+        }
+
+        /* Articles Styling */
+        article {
+            margin-bottom: 20px;
+        }
+
+        article h2 {
+            font-family: var(--font-celtic);
+            font-size: 1.6rem;
+            border-bottom: 2px solid var(--cornish-black);
+            padding-bottom: 3px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        article h3 {
+            font-family: var(--font-celtic);
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        p {
+            text-align: justify;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+
+        p::first-letter {
+            font-family: var(--font-masthead);
+            font-size: 2.8rem;
+            float: left;
+            line-height: 0.8;
+            padding-right: 5px;
+            color: var(--cornish-black);
+        }
+
+        /* Sidebar & Advertisements */
+        .sidebar {
+            border-left: 2px solid var(--cornish-black);
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .ad-box {
+            border: 4px dashed var(--cornish-black);
+            background-color: var(--cornish-yellow);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 4px 4px 0px var(--cornish-black);
+        }
+
+        .ad-box h3 {
+            font-family: var(--font-masthead);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .ad-box p {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .ad-box p::first-letter {
+            float: none;
+            font-size: inherit;
+            font-family: inherit;
+        }
+
+        .btn-buy {
+            display: block;
+            width: 100%;
+            background-color: var(--cornish-black);
+            color: var(--cornish-yellow);
+            font-family: var(--font-celtic);
+            font-size: 1.2rem;
+            padding: 12px;
+            text-decoration: none;
+            border: 2px solid var(--cornish-white);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+
+        .btn-buy:hover {
+            background-color: var(--cornish-white);
+            color: var(--cornish-black);
+            border-color: var(--cornish-black);
+        }
+
+        .fact-box {
+            border: 2px solid var(--cornish-black);
+            padding: 15px;
+            background-color: #EBE0C9;
+        }
+
+        .fact-box h4 {
+            font-family: var(--font-celtic);
+            text-align: center;
+            border-bottom: 1px solid var(--cornish-black);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Multi-column article section below */
+        .lower-section {
+            margin-top: 25px;
+            border-top: 4px double var(--cornish-black);
+            padding-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        footer {
+            margin-top: 30px;
+            border-top: 2px solid var(--cornish-black);
+            padding-top: 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-family: var(--font-celtic);
+        }
+
+        /* Controls / Interactive Overlay */
+        .instructions-3d {
+            position: absolute;
+            bottom: 35px;
+            right: 10px;
+            background: rgba(13, 13, 13, 0.7);
+            color: var(--cornish-white);
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Message Box Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--paper-bg);
+            border: 6px double var(--cornish-black);
+            padding: 25px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .modal-content h3 {
+            font-family: var(--font-celtic);
+            margin-bottom: 10px;
+        }
+
+        .modal-content button {
+            margin-top: 15px;
+            background-color: var(--cornish-black);
+            color: var(--cornish-yellow);
+            border: none;
+            padding: 8px 16px;
+            font-family: var(--font-celtic);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-content, .lower-section {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                border-left: none;
+                border-top: 2px solid var(--cornish-black);
+                padding-left: 0;
+                padding-top: 20px;
+            }
+            .masthead {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="newspaper">
+    <!-- Header -->
+    <header>
+        <div class="top-bar">
+            <span><span class="flag-icon"></span> One and All (Onen hag All)</span>
+            <span>Kernow Edition — No. 4,812</span>
+            <span>Price: One Penny</span>
+        </div>
+        <h1 class="masthead">The Cornish Telegraph</h1>
+        <div class="tagline">Chronicle of Royal Cornwall, Tin Mines & Culinary Marvels</div>
+    </header>
+
+    <!-- Callout Banner -->
+    <div class="banner-callout">
+        ✦ BUY A GENUINE CORNISH PASTY TODAY — NATION'S FAVOURITE DELICACY ✦
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-content">
+        <!-- Left Column: 3D Viewer & Main History Article -->
+        <div class="left-col">
+            
+            <!-- Interactive 3D Model Stage -->
+            <div class="interactive-stage">
+                <div class="stage-header">
+                    <h2>EXHIBIT A: The Traditional Cornish Pasty</h2>
+                    <span>[ Interactive 3D Artefact ]</span>
+                </div>
+                <div id="canvas-container"></div>
+                <div class="instructions-3d">Drag to rotate | Scroll to zoom</div>
+                <div class="stage-caption">
+                    FIG 1. An authentic crimped pasty, baked to golden perfection. Examine the sacred crust from all angles above.
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <article style="margin-top: 25px;">
+                <h2>The Noble History of Kernow’s Pride</h2>
+                <p>
+                    The origin of the Cornish pasty is deeply interwoven with the rugged landscape and mining heritage of Cornwall. While filled pastries existed in medieval times, it was during the 17th and 18th centuries that the pasty evolved into the definitive meal for the working men of Kernow. Adopted passionately by tin miners, quarrymen, and fishermen, the pasty provided a complete, highly portable, and nutrient-dense lunch capable of sustaining relentless manual labour deep underground.
+                </p>
+                <p>
+                    Packed with rich beef, sliced potato, swede (often known in Cornwall as 'turnip'), and onion, a properly made pasty possessed such thermal retention that it would remain piping hot for hours, wrapped simple-like in a thick cloth or paper napkin.
+                </p>
+            </article>
+
+        </div>
+
+        <!-- Right Column: Sidebar with Sales Pitch -->
+        <div class="sidebar">
+            
+            <!-- BUY ADVERT -->
+            <div class="ad-box">
+                <h3>Satisfy Thy Hunger!</h3>
+                <p>Craving the unmatched taste of authentic Cornish beef, fresh potato, and seasoned swede baked inside golden pastry?</p>
+                <button class="btn-buy" onclick="triggerPurchase()">ORDER YOUR PASTY NOW</button>
+                <span style="font-size: 0.75rem; display: block; margin-top: 8px;">Delivered hot to your doorstep overnight!</span>
+            </div>
+
+            <!-- Fact Box -->
+            <div class="fact-box">
+                <h4>The Pasty Anatomy</h4>
+                <ul style="list-style-type: square; padding-left: 20px; font-size: 0.95rem;">
+                    <li><strong>Beef:</strong> Diced or minced prime Cornish beef.</li>
+                    <li><strong>Vegetables:</strong> Sliced potato, swede, and onion.</li>
+                    <li><strong>Crimping:</strong> Side-crimped, never top-crimped!</li>
+                    <li><strong>Seasoning:</strong> Salt & generous black pepper.</li>
+                </ul>
+            </div>
+
+            <!-- Miner Quote -->
+            <div style="border-left: 4px solid var(--cornish-black); padding-left: 10px; font-style: italic;">
+                "A pasty kept a miner warm in the deepest dark of the tin pits. There is no finer fuel for an honest worker!"
+                <br><strong>— Cornish Mining Gazette, 1864</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Lower Section: Columns for Crust Significance & Nationwide Fame -->
+    <div class="lower-section">
+        
+        <!-- Crust Article -->
+        <article>
+            <h2>The Sacred Crust: A Miner's Handle</h2>
+            <p>
+                Why is the thick, crimped edge of the pasty so distinct? It was born out of stark necessity. In the tin mines of Cornwall, workers operated in dangerous conditions contaminated with arsenic and poisonous dusts. Their hands were invariably filthy with grime and toxic heavy metals.
+            </p>
+            <p>
+                The sturdy crimped crust served as a disposable handle. Miners held the pasty by this thick edge, ate the savory middle, and discarded the dirty crust into the dark mine shafts. According to local folklore, these thrown crusts placated the 'Knockers'—mischievous mine spirits who would otherwise cause cave-ins or lead workers astray!
+            </p>
+        </article>
+
+        <!-- Nationwide Popularity Article -->
+        <article>
+            <h2>From Kernow to the Realm</h2>
+            <p>
+                How did a humble miner's lunch capture the heart of the entire British nation? As Cornish tin mining declined in the late 19th century, thousands of Cornish miners emigrated to every corner of the globe—taking their coveted recipes with them to America, Australia, South Africa, and across the UK.
+            </p>
+            <p>
+                Today, the Cornish Pasty holds Protected Geographical Indication (PGI) status under law. Its popularity endures because it remains a masterpiece of culinary engineering: satisfying, wholesome, rich in flavor, and rich in history. From seaside holidays to bustling city high streets, the sight and aroma of a hot pasty remains irresistible.
+            </p>
+        </article>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Printed & Published in Truro, Cornwall. All Rights Reserved. Kernow bvs Kanken! (Cornwall Forever!)
+    </footer>
+</div>
+
+<!-- Modal Message Box -->
+<div id="purchaseModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Grand Choice!</h3>
+        <p>An excellent choice! You are about to taste authentic Cornish perfection. Your pasty order is being dispatched from Truro Bakery.</p>
+        <button onclick="closeModal()">Close Notice</button>
+    </div>
+</div>
+
+<script>
+    // Purchase Trigger Interactive Feedback (No alert())
+    function triggerPurchase() {
+        document.getElementById('purchaseModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('purchaseModal').style.display = 'none';
+    }
+
+    // Three.js 3D Asset Loader Script
+    let scene, camera, renderer, controls, pastyMesh;
+
+    function init3D() {
+        const container = document.getElementById('canvas-container');
+        if (!container) return;
+
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        // Scene
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe2d7be);
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.set(0, 40, 100);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const dirLight1 = new THREE.DirectionalLight(0xfffcdd, 1.2);
+        dirLight1.position.set(50, 100, 50);
+        scene.add(dirLight1);
+
+        const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+        dirLight2.position.set(-50, -20, -50);
+        scene.add(dirLight2);
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        container.appendChild(renderer.domElement);
+
+        // Controls
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.5;
+
+        // Load 3D Asset (or fall back to procedural model if no URL is provided)
+        loadGLTFModel();
+
+        // Responsive Resizing
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    // =========================================================================
+    // 3D MODEL LOADING SECTION - ADD / SWAP YOUR CUSTOM 3D ASSET HERE
+    // =========================================================================
+    function loadGLTFModel() {
+        // ---------------------------------------------------------------------
+        // STEP 1: REPLACE THE URL BELOW WITH YOUR OWN .GLB / .GLTF FILE PATH OR URL
+        // Example local path: 'assets/my_cornish_pasty.glb'
+        // Example web URL:   'https://yourdomain.com/models/pasty.gltf'
+        // ---------------------------------------------------------------------
+        const myCustom3DAssetUrl = ''; // <--- INSERT YOUR 3D ASSET URL / PATH HERE
+
+        if (myCustom3DAssetUrl && myCustom3DAssetUrl.trim() !== '') {
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                myCustom3DAssetUrl,
+                function (gltf) {
+                    pastyMesh = gltf.scene;
+                    
+                    // Adjust scale and position as required for your model
+                    pastyMesh.scale.set(10, 10, 10);
+                    pastyMesh.position.set(0, 0, 0);
+                    
+                    scene.add(pastyMesh);
+                },
+                undefined,
+                function (error) {
+                    console.warn("Could not load custom 3D model, using procedural model fallback.", error);
+                    createProceduralPasty();
+                }
+            );
+        } else {
+            // Default procedural pasty displayed if no custom URL is specified
+            createProceduralPasty();
+        }
+    }
+
+    // Procedural Pasty Creation to guarantee rich 3D rendering
+    function createProceduralPasty() {
+        const group = new THREE.Group();
+
+        // Main Pasty Dough Body
+        const bodyGeo = new THREE.SphereGeometry(25, 32, 16);
+        bodyGeo.scale(1.8, 0.85, 0.8);
+        
+        const pastyMat = new THREE.MeshStandardMaterial({
+            color: 0xdca852,
+            roughness: 0.6,
+            metalness: 0.05
+        });
+
+        const body = new THREE.Mesh(bodyGeo, pastyMat);
+        body.position.y = 0;
+        group.add(body);
+
+        // Crimped Edge (Torus curve along side)
+        const crimpGeo = new THREE.TorusGeometry(26, 3.5, 16, 100, Math.PI);
+        const crimpMat = new THREE.MeshStandardMaterial({
+            color: 0xc8923a,
+            roughness: 0.7
+        });
+        const crimp = new THREE.Mesh(crimpGeo, crimpMat);
+        crimp.rotation.x = Math.PI / 2;
+        crimp.scale.set(1.7, 0.85, 1);
+        crimp.position.set(0, 0, 0);
+        group.add(crimp);
+
+        group.rotation.x = 0.2;
+        group.rotation.y = 0.5;
+
+        scene.add(group);
+        pastyMesh = group;
+    }
+
+    function onWindowResize() {
+        const container = document.getElementById('canvas-container');
+        if(!container || !renderer || !camera) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if (controls) controls.update();
+        if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+        }
+    }
+
+    // Initialize on window load
+    window.onload = function() {
+        init3D();
+        animate();
+    };
+</script>
+
+</body>
+</html>
